@@ -5,7 +5,10 @@
 #include <opencv2/opencv.hpp>
 
 bool first_time = true;
+bool first_rectangles = true;
 
+std::vector<cv::Rect> windows;
+    
 ros::Publisher pub_lane;
 
 std::vector<cv::Point2f> slidingWindow(cv::Mat image, cv::Mat windowed, std::vector<cv::Rect> &windows)
@@ -90,6 +93,9 @@ std::vector<cv::Point2f> slidingWindow(cv::Mat image, cv::Mat windowed, std::vec
     //std::cout.flush();        
     }
 
+    cv::imshow("dawsd", windowed);
+    cv::waitKey(1);
+
     return points;
 }
 
@@ -99,16 +105,30 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
     double obs_rho = 0;
     double best_theta = 0.896055;
     double best_rho =  330.932;
-    std::vector<cv::Rect> windows;
 
     cv::Mat processed;
     cv::Mat transformed(480, 640, CV_8UC3); //Destination for warped image                  
     cv::Mat windowed(480, 640, CV_8UC3);
-    cv::Mat orig = orig_image.clone();   
+    cv::Mat orig = orig_image.clone(); 
+  
+    
+    if (first_rectangles) {
+        int y_rect = 384;
+        int h_rect = 96;
+
+        for (int i = 0; i < 5; i++) {
+            windows.push_back(cv::Rect(440, y_rect, 200, h_rect));                   
+            y_rect = y_rect - h_rect;
+            //std::cout << i << std::endl;
+        }
+        first_rectangles = false;
+    }
 
     // Extract ROI myROI(x, y, width, height)
     // HHAA: ROI dimensions MUST be tuned.
-    //cv::Rect myROI(100, 239, 540, 240); // pt1(x,y), pt2(x + width, y + height)      
+    //cv::Rect myROI(100, 239, 540, 240); // pt1(x,y), pt2(x + width, y + height)     
+    
+// while start 
     cv::Rect myROI(0, 200, 639, 279);
     cv::Mat image_roi = orig(myROI);  
 
@@ -141,8 +161,9 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
 
     // Keep only what's above 100 value, other is then black 
     // HHAA: White threshold MUST be tuned.     
-    const int  thresholdVal= 100;
+    const int thresholdVal = 100;
     cv::threshold(processed, processed, thresholdVal, 255, cv::THRESH_BINARY);
+
     // Transformacion homografica
     int x1 = 150;
     int x2 = 650;
@@ -172,8 +193,10 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
     cv::invert(perspectiveMatrix, invertedPerspectiveMatrix);
 
     cv::warpPerspective(processed, transformed, perspectiveMatrix, transformed.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);      
-
+    
     transformed.copyTo(windowed);
+
+    /*
     int y_rect = 384;
     int h_rect = 96;
 
@@ -181,14 +204,13 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
         windows.push_back(cv::Rect(440, y_rect, 200, h_rect));                   
         y_rect = y_rect - h_rect;
     }
-
+    */
     std::vector<cv::Point2f> pts = slidingWindow(transformed, windowed, windows);
-
+    
     if (pts.size() > 0){
 
     std::vector<cv::Point2f> outPts;
     perspectiveTransform(pts, outPts, invertedPerspectiveMatrix);
-
 
     cv::Point p1 = outPts[0];
     cv::Point p2 = outPts[outPts.size() - 1];  
@@ -241,9 +263,6 @@ void imageCallback(const sensor_msgs::Image::ConstPtr& msg)
     //msg = *msg_const_ptr;
     cv::Mat color(cv::Size(640, 480), CV_8UC3, (unsigned char*)msg->data.data(), cv::Mat::AUTO_STEP);
     //std::cout << std::endl << "image recieved" << std::endl;
-    
-    cv::imshow("imga", color);
-    cv::waitKey(10); 
    
     float obs_rho_pub, obs_theta_pub, best_rho_pub, best_theta_pub;  
     cv::Mat result;
