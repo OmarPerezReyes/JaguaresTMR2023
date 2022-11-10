@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(realsense2 REQUIRED)
 
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV)
 
 ## Generate messages in the 'msg' folder
 # add_message_files(
@@ -77,7 +77,7 @@ find_package(OpenCV 3 REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS
   LIBRARIES brake
   CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge
   sensor_msgs
