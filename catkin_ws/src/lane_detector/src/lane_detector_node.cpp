@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
-#include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Float32MultiArray.h" 
 
 #include <opencv2/opencv.hpp>
 
@@ -8,95 +8,92 @@ bool first_time = true;
 
 ros::Publisher pub_lane;
 
-std::vector<cv::Point2f> slidingWindow(cv::Mat image, cv::Mat  windowed, std::vector<cv::Rect> &windows)
+std::vector<cv::Point2f> slidingWindow(cv::Mat image, cv::Mat windowed, std::vector<cv::Rect> &windows)
 {
 
     std::vector<cv::Point2f> points;
     const cv::Size imgSize = image.size();
 
-    for (int i = 0; i < 5; i++)
-    {
+    for (int i = 0; i < 5; i++) {
 
-    float currentX = windows.at(i).x + windows.at(i).width * 0.5f;
+       float currentX = windows.at(i).x + windows.at(i).width * 0.5f;
 
-    cv::rectangle(windowed, cv::Rect(windows.at(i).x, windows.at(i).y, windows.at(i).width, windows.at(i).height), cv::Scalar(255, 255, 0), 1, 8, 0); 
+       cv::rectangle(windowed, cv::Rect(windows.at(i).x, windows.at(i).y, windows.at(i).width, windows.at(i).height), cv::Scalar(255, 255, 0), 1, 8, 0); 
 
-    //std::cout << rect.x << " " << rect.y << " " << rect.width << " " <<  rect.height << std::endl; 
-    //std::cout.flush();                        
-    cv::Mat roi = image(windows.at(i)); //Extract region of interest         
-    cv::Mat locations;   // output, locations of non-zero pixels 
+        //std::cout << rect.x << " " << rect.y << " " << rect.width << " " <<  rect.height << std::endl; 
+        //std::cout.flush();                        
+        cv::Mat roi = image(windows.at(i)); //Extract region of interest         
+        cv::Mat locations;   // output, locations of non-zero pixels 
 
-    cv::findNonZero(roi, locations); //Get all non-black pixels. All are white in our case         
+        cv::findNonZero(roi, locations); //Get all non-black pixels. All are white in our case         
 
-    float avgX = 0.0f;
+        float avgX = 0.0f;
 
-    // std::cout << "i: " << i << " locations.elemSize() " <<  locations.elemSize() << std::endl;
-    if (locations.elemSize() > 0){
+        // std::cout << "i: " << i << " locations.elemSize() " <<  locations.elemSize() << std::endl;
+        if (locations.elemSize() > 0){
 
-    for (int j = 0; j < locations.elemSize(); ++j) //Calculate average X position         
-    {
-        float x = locations.at<cv::Point>(j).x;
-        avgX += windows.at(i).x + x; // x-coordinate relative to the original image
-    }
-
-    avgX = locations.empty() ? currentX : avgX / locations.elemSize();
-
-    cv::Point point(avgX, windows.at(i).y + windows.at(i).height * 0.5f);
-    points.push_back(point);
-
-    //Move x position
-    windows.at(i).x = (int)round(avgX - windows.at(i).width *.5);
-
-    if (i < windows.size() - 1){
-        if (windows.at(i).x + windows.at(i).width < windows.at(i + 1).x ||  windows.at(i).x > windows.at(i + 1).x + round(windows.at(i + 1).width)){
-            //pts.erase(pts.begin() + i);
-            windows.at(i).x = windows.at(i + 1).x;
-            points.pop_back();
-            cv::Point new_point(
-            windows.at(i + 1).x + round(windows.at(i + 1).width * 0.5f),
-            windows.at(i).y + windows.at(i).height * 0.5f);
-            points.push_back(new_point);     
+        for (int j = 0; j < locations.elemSize(); ++j) //Calculate average X position         
+        {
+            float x = locations.at<cv::Point>(j).x;
+            avgX += windows.at(i).x + x; // x-coordinate relative to the original image
         }
-    }
 
-    if (i == windows.size() - 1){
-        if (windows.at(i).x + windows.at(i).width < windows.at(i - 1).x ||  windows.at(i).x > windows.at(i - 1).x + round(windows.at(i - 1).width)){
-            float avgX = 0.0f;
+        avgX = locations.empty() ? currentX : avgX / locations.elemSize();
 
-            for (int j = 0; j < windows.size() - 1; ++j){
-                avgX += windows.at(i).x; 
+        cv::Point point(avgX, windows.at(i).y + windows.at(i).height * 0.5f);
+        points.push_back(point);
+
+        //Move x position
+        windows.at(i).x = (int)round(avgX - windows.at(i).width *.5);
+
+        if (i < windows.size() - 1){
+            if (windows.at(i).x + windows.at(i).width < windows.at(i + 1).x ||  windows.at(i).x > windows.at(i + 1).x + round(windows.at(i + 1).width)){
+                //pts.erase(pts.begin() + i);
+                windows.at(i).x = windows.at(i + 1).x;
+                points.pop_back();
+                cv::Point new_point(
+                windows.at(i + 1).x + round(windows.at(i + 1).width * 0.5f),
+                windows.at(i).y + windows.at(i).height * 0.5f);
+                points.push_back(new_point);     
             }
+        }
 
-            avgX = avgX / (windows.size() - 1);
-            windows.at(i).x = avgX; //windows.at(i - 1).x;
-            points.pop_back();
-            cv::Point new_point(windows.at(i).x, windows.at(i).y + windows.at(i).height * 0.5f);
-            points.push_back(new_point);
-        }  
+        if (i == windows.size() - 1){
+            if (windows.at(i).x + windows.at(i).width < windows.at(i - 1).x ||  windows.at(i).x > windows.at(i - 1).x + round(windows.at(i - 1).width)){
+                float avgX = 0.0f;
 
-    }
+                for (int j = 0; j < windows.size() - 1; ++j){
+                    avgX += windows.at(i).x; 
+                }
 
-    //std::cout << " windows.at(i).x " << windows.at(i).x << " point.x " <<  point.x << " currentX " << currentX <<  std::endl;
-    //std::cout << " windows.at(i).width " << windows.at(i).width <<  std::endl;        
-    //std::cout.flush();               
-    //Make sure the window doesn't overflow, we get an error if we try to get data outside the matrix         
-    if (windows.at(i).x < 0)
-        windows.at(i).x = 0;
-    if (windows.at(i).x + windows.at(i).width >= imgSize.width)
-        windows.at(i).x = imgSize.width - windows.at(i).width - 1;
+                avgX = avgX / (windows.size() - 1);
+                windows.at(i).x = avgX; //windows.at(i - 1).x;
+                points.pop_back();
+                cv::Point new_point(windows.at(i).x, windows.at(i).y + windows.at(i).height * 0.5f);
+                points.push_back(new_point);
+            }  
+
+        }
+
+        //std::cout << " windows.at(i).x " << windows.at(i).x << " point.x " <<  point.x << " currentX " << currentX <<  std::endl;
+        //std::cout << " windows.at(i).width " << windows.at(i).width <<  std::endl;        
+        //std::cout.flush();               
+        //Make sure the window doesn't overflow, we get an error if we try to get data outside the matrix         
+        if (windows.at(i).x < 0)
+            windows.at(i).x = 0;
+        if (windows.at(i).x + windows.at(i).width >= imgSize.width)
+            windows.at(i).x = imgSize.width - windows.at(i).width - 1;
 
     } // if locations.elemSize() > 0
 
     //std::cout << " Overflow windows.at(i).x " << windows.at(i).x <<  std::endl;
-    //std::cout.flush();           
-
-
+    //std::cout.flush();        
     }
 
     return points;
 }
 
-void process_img(cv::Mat orig_image, float &rho, float &theta, cv::Mat &out_image) {
+void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, float &best_rho_pub ,float &best_theta_pub, cv::Mat &out_image) {
 
     double obs_theta = 0;
     double obs_rho = 0;
@@ -152,8 +149,7 @@ void process_img(cv::Mat orig_image, float &rho, float &theta, cv::Mat &out_imag
     int x3 = 560;
     int x4 = 190;
     int y1 = 160;
-    int y2 = 80;        
-
+    int y2 = 80;
 
     cv::Point2f srcVertices[4]; 
     srcVertices[0] = cv::Point(x1, y1);
@@ -226,16 +222,16 @@ void process_img(cv::Mat orig_image, float &rho, float &theta, cv::Mat &out_imag
     }
         cv::line(image_roi, cv::Point(mid.x, mid.y), cv::Point(320, 279), cv::Scalar(255, 0, 255), 3, cv::LINE_AA);  
     } 
-    rho = obs_rho;
-    theta = obs_theta;
+    obs_rho_pub = obs_rho;
+    obs_theta_pub = obs_theta;
+    best_rho_pub = best_rho;
+    best_theta_pub = best_theta;
 
     out_image = image_roi;
-
-
 }
 
 // Messages are passed to a callback function (here)
-void imageCallback(const sensor_msgs::Image::ConstPtr& msg)
+void imageCallback(const sensor_msgs::Image::ConstPtr& msg)    
 {
 
     //sensor_msgs::Image msg;
@@ -246,17 +242,22 @@ void imageCallback(const sensor_msgs::Image::ConstPtr& msg)
     cv::Mat color(cv::Size(640, 480), CV_8UC3, (unsigned char*)msg->data.data(), cv::Mat::AUTO_STEP);
     //std::cout << std::endl << "image recieved" << std::endl;
     
-    float rho, theta;
+    cv::imshow("imga", color);
+    cv::waitKey(10); 
+   
+    float obs_rho_pub, obs_theta_pub, best_rho_pub, best_theta_pub;  
     cv::Mat result;
 
-    process_img(color, rho, theta, result);
+    process_img(color, obs_rho_pub, obs_theta_pub, best_rho_pub, best_theta_pub, result);
     cv::imshow("img", result);
-    cv::waitKey(10);
+    cv::waitKey(1);
     
     std_msgs::Float32MultiArray lane_msg;
 
-    lane_msg.data.push_back(rho);
-    lane_msg.data.push_back(theta);
+    lane_msg.data.push_back(obs_rho_pub);
+    lane_msg.data.push_back(obs_theta_pub);
+    lane_msg.data.push_back(best_rho_pub);
+    lane_msg.data.push_back(best_theta_pub);
 
     pub_lane.publish(lane_msg);
 }
@@ -268,7 +269,7 @@ int main(int argc, char **argv)
     any ROS arguments and name remapping that were provided at the command line. 
     The third argument to init() is the name of the node.
     */
-    ros::init(argc, argv, "lane_detector");
+    ros::init(argc, argv, "lane_detector_node");
 
     /*
     NodeHandle is the main access point to communications with the ROS system.
@@ -293,7 +294,7 @@ int main(int argc, char **argv)
     pub_lane = n.advertise<std_msgs::Float32MultiArray>("/lane_right", 1);
  
     // ros::spin() will enter a loop, pumping callbacks. 
-    ros::spin();
+    ros::spin(); 
 
     return 0;
 }

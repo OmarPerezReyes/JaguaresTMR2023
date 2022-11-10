@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     rs2::frameset frames;
 
     //Get each frame
-    ros::init(argc, argv, "image_capture"); 
+    ros::init(argc, argv, "image_capture_node"); 
 
     ros::NodeHandle n;
 

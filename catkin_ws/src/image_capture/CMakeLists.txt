@@ -80,7 +80,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES brake
   CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge
-  autominy_msgs
   sensor_msgs
 )
 

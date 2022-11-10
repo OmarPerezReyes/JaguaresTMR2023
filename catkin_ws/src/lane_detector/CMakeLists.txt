@@ -80,6 +80,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES brake
   CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge
+  autominy_msgs
   sensor_msgs
 )
 
@@ -89,6 +90,11 @@ catkin_package(
 
 include_directories(
  include ${realsense_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} 
+)
+
+include_directories(
+# include
+  ${catkin_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
