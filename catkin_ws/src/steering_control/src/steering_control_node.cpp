@@ -110,7 +110,7 @@ void laneCallback(const std_msgs::Float32MultiArray::ConstPtr& msg)
 
 int main(int argc, char* argv[])
 {
-    ros::init(argc, argv, "data_processing");
+    ros::init(argc, argv, "steering_control_node");
     ros::NodeHandle n;
 
     ros::Subscriber sub = n.subscribe("/lane_right", 1, laneCallback);
@@ -118,8 +118,7 @@ int main(int argc, char* argv[])
     pubSpeed = n.advertise<autominy_msgs::SpeedPWMCommand>("/actuators/speed_pwm", 10);
     pubSteering = n.advertise<autominy_msgs::SteeringPWMCommand>("/actuators/steering_pwm", 10);
 
-
-    // ros::Subscriber speed = n.subscribe("/sensors/arduino/steering_angle", 10, steeringCallback);
+    // ros::Subscriber speed = n.subscribe("/sensors/arduino/steering_angle", 10, steeringCallback); A 
 
     signal(SIGINT, mySigintHandler);
     
