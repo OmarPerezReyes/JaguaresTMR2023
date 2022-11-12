@@ -1,0 +1,12 @@
+<launch> 
+
+<!--
+    <include file="$(find autominy)/launch/Live_UPV.launch"></include>
+/dev/null salinda nula
+remap 
+txt
+-->
+
+    <include file="$(find autominy)/launch/Live_UPV.launch"></include>
+    <node name="lane_detector" pkg="lane_detector" type="lane_detector_node" output="screen"></node>
+</launch>

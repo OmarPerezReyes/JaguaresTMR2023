@@ -214,7 +214,7 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
 
     cv::Point p1 = outPts[0];
     cv::Point p2 = outPts[outPts.size() - 1];  
-
+    //Línea trazada sobre el borde del carril
     cv::line(image_roi, p1, p2, cv::Scalar(255, 0, 100), 3);
 
     double m = (p2.y - p1.y)/ (double) (p2.x - p1.x);  
@@ -242,6 +242,7 @@ void process_img(cv::Mat orig_image, float &obs_rho_pub, float &obs_theta_pub, f
         obs_rho = sqrt((pow(320 - mid.x, 2) + pow(279 - mid.y, 2)));
 
     }
+        //linea que va desde el origen hasta el punto medio de la línea sobre el carril
         cv::line(image_roi, cv::Point(mid.x, mid.y), cv::Point(320, 279), cv::Scalar(255, 0, 255), 3, cv::LINE_AA);  
     } 
     obs_rho_pub = obs_rho;
